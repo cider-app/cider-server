@@ -84,5 +84,12 @@ exports.updateItem = functions.firestore
     })
 
 exports.createUser = functions.auth.user().onCreate((user, context) => {
-    
+    return db.collection("users").doc(user.uid).set({
+        email: user.email,
+        displayName: user.displayName,
+        phoneNumber: user.phoneNumber,
+        emailVerified: user.emailVerified,
+        createdOn: context.timestamp,
+        modifiedOn: context.timestamp
+    })
 })
