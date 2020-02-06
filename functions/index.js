@@ -9,10 +9,33 @@ const db = admin.firestore();
 exports.createItem = functions.firestore
     .document("items/{item}")
     .onCreate((snap, context) => {
+        const data = snap.data(); 
+
+        // Add createdOn and createdBy to document
         return snap.ref.set({
             createdOn: snap.createTime,
-            createdBy: context.auth ? context.auth.uid : null
+            createdBy: data.createdBy,
+            modifiedOn: snap.createTime,
+            modifiedBy: data.createdBy
         }, {merge: true})
+        .then(() => {
+            // Create a new doc mapping the new item to the use that created the item
+            return db.collection("userToItem").add({
+                item: {
+                    id: snap.id,
+                    link: data.link,
+                    title: data.title,
+                    description: data.description
+                },
+                user: {
+                    id: data.createdBy
+                },
+                createdOn: snap.createTime,
+                createdBy: data.createdBy,
+                modifiedOn: snap.createTime,
+                modifiedBy: data.createdBy
+            })
+        })
     })
 
 exports.updateCollection = functions.firestore
@@ -28,11 +51,16 @@ exports.updateCollection = functions.firestore
             var batch = db.batch(); 
 
             // Update userToCollection documents
-            const getDocs = db.collection("userToCollection").where("collectionId", "==", context.params.collectionId).get()
+            const getDocs = db.collection("userToCollection").where("collection.id", "==", context.params.collectionId).get()
             return getDocs.then(function(querySnapshot) {
                 querySnapshot.forEach(function(doc) {
                     var ref = doc.ref; 
-                    batch.update(ref, { collectionName: data.name, collectionDescription: data.description })
+                    batch.update(ref, { 
+                        collection: {
+                            name: data.name, 
+                            description: data.description
+                        }
+                    })
                 })
 
                 return batch.commit()
@@ -46,9 +74,31 @@ exports.updateCollection = functions.firestore
 exports.createCollection = functions.firestore
     .document("collections/{collectionId}")
     .onCreate((snapshot, context) => {
+        const data = snapshot.data(); 
+
         return snapshot.ref.set({
-            createdOn: snapshot.createTime
+            createdOn: snapshot.createTime,
+            createdBy: data.createdBy,
+            modifiedOn: snapshot.createTime,
+            modifiedBy: data.createdBy
         }, {merge: true})
+        .then(() => {
+            // Create a new doc mapping the new item to the use that created the item
+            return db.collection("userToCollection").add({
+                collection: {
+                    id: snap.id,
+                    name: data.name,
+                    description: data.description
+                },
+                user: {
+                    id: data.createdBy
+                },
+                createdOn: snapshot.createTime,
+                createdBy: data.createdBy,
+                modifiedOn: snapshot.createTime,
+                modifiedBy: data.createdBy
+            })
+        })
     })
 
 exports.updateItem = functions.firestore
@@ -62,22 +112,24 @@ exports.updateItem = functions.firestore
                 return null
             }
 
-            var batch = db.batch(); 
+            return null;
 
-            // Update all subcollections "collectionItems" 
-            const getDocs = db.collectionGroup("collectionItems").where("id", "==", context.params.itemId).get();
-            return getDocs.then(function(querySnapshot) {
-                querySnapshot.forEach(function(doc) {
-                    var ref = doc.ref; 
-                    batch.update(ref, { 
-                        itemTitle: data.title, 
-                        itemDescription: data.description,
-                        itemLink: data.link 
-                    })
-                })
-                return batch.commit()
-            })
-            .catch(error => console.log(error))
+            // var batch = db.batch(); 
+
+            // // Update all subcollections "collectionItems" 
+            // const getDocs = db.collectionGroup("collectionItems").where("id", "==", context.params.itemId).get();
+            // return getDocs.then(function(querySnapshot) {
+            //     querySnapshot.forEach(function(doc) {
+            //         var ref = doc.ref; 
+            //         batch.update(ref, { 
+            //             itemTitle: data.title, 
+            //             itemDescription: data.description,
+            //             itemLink: data.link 
+            //         })
+            //     })
+            //     return batch.commit()
+            // })
+            // .catch(error => console.log(error))
         } else {
             return null
         }
