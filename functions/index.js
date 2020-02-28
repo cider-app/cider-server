@@ -25,15 +25,14 @@ exports.createItem = functions.firestore
                     id: snap.id,
                     link: data.link,
                     title: data.title,
-                    description: data.description
+                    description: data.description,
+                    stealth: data.stealth
                 },
                 user: {
                     id: data.createdBy
                 },
                 createdOn: snap.createTime,
-                createdBy: data.createdBy,
                 modifiedOn: snap.createTime,
-                modifiedBy: data.createdBy
             })
         })
     })
@@ -48,24 +47,26 @@ exports.updateCollection = functions.firestore
                 return null   
             }
 
-            var batch = db.batch(); 
+            return null; 
 
-            // Update userToCollection documents
-            const getDocs = db.collection("userToCollection").where("collection.id", "==", context.params.collectionId).get()
-            return getDocs.then(function(querySnapshot) {
-                querySnapshot.forEach(function(doc) {
-                    var ref = doc.ref; 
-                    batch.update(ref, { 
-                        collection: {
-                            name: data.name, 
-                            description: data.description
-                        }
-                    })
-                })
+            // var batch = db.batch(); 
 
-                return batch.commit()
-            })
-            .catch(error => console.log(error))
+            // // Update userToCollection documents
+            // const getDocs = db.collection("userToCollection").where("collection.id", "==", context.params.collectionId).get()
+            // return getDocs.then(function(querySnapshot) {
+            //     querySnapshot.forEach(function(doc) {
+            //         var ref = doc.ref; 
+            //         batch.update(ref, { 
+            //             collection: {
+            //                 name: data.name, 
+            //                 description: data.description
+            //             }
+            //         })
+            //     })
+
+            //     return batch.commit()
+            // })
+            // .catch(error => console.log(error))
         } else {
             return null; 
         }
@@ -83,21 +84,29 @@ exports.createCollection = functions.firestore
             modifiedBy: data.createdBy
         }, {merge: true})
         .then(() => {
-            // Create a new doc mapping the new item to the use that created the item
-            return db.collection("userToCollection").add({
-                collection: {
-                    id: snap.id,
-                    name: data.name,
-                    description: data.description
-                },
-                user: {
-                    id: data.createdBy
-                },
+            return db.collection("users").doc(data.createdBy).collection("userCollections").doc(snapshot.id).set({
+                id: snapshot.id,
+                name: data.name,
                 createdOn: snapshot.createTime,
                 createdBy: data.createdBy,
                 modifiedOn: snapshot.createTime,
                 modifiedBy: data.createdBy
             })
+
+            // // Create a new doc mapping the new item to the use that created the item
+            // return db.collection("userToCollection").add({
+            //     collection: {
+            //         id: snapshot.id,
+            //         name: data.name,
+            //     },
+            //     user: {
+            //         id: data.createdBy
+            //     },
+            //     createdOn: snapshot.createTime,
+            //     createdBy: data.createdBy,
+            //     modifiedOn: snapshot.createTime,
+            //     modifiedBy: data.createdBy
+            // })
         })
     })
 
