@@ -1,4 +1,5 @@
 const functions = require('firebase-functions');
+let grabity = require('grabity'); 
 
 //Establish connection to Firestore
 const admin = require('firebase-admin');
@@ -10,15 +11,42 @@ exports.createItem = functions.firestore
     .document("collections/{collection}/collectionItems/{collectionItem}")
     .onCreate((snap, context) => {
         const data = snap.data(); 
+        const link = data.link; 
         const createdOn = snap.createTime; 
         const createdBy = data.createdBy; 
 
-        // Add createdOn and createdBy to document
         return snap.ref.set({
             createdOn,
             modifiedOn: createdOn,
-            modifiedBy: createdBy
+            modifiedBy: createdBy,
         }, { merge: true })
+            .then(() => {
+                return grabity.grabIt(link)
+                    .then(result => {
+                        return snap.ref.set({
+                            title: result.title,
+                            description: result.description,
+                            image: result.image,
+                            favicon: result.favicon
+                        }, { merge: true })
+                        .catch(error => console.log(error))
+                    })
+                    .catch(error => console.log(error));
+            })
+            .catch(error => console.log(error))
+
+        // return grabity.grabIt(link)
+        //     .then(result => {
+        //         return snap.ref.set({
+        //             createdOn,
+        //             modifiedOn: createdOn,
+        //             modifiedBy: createdBy,
+        //             title: result.title,
+        //             description: result.description,
+        //             image: result.image,
+        //             favicon: result.favicon
+        //         }, { merge: true })
+        //     })
     })
 
 // exports.updateCollection = functions.firestore
