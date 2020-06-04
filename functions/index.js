@@ -7,158 +7,143 @@ admin.initializeApp();
 
 const db = admin.firestore(); 
 
-// exports.updateUser = functions.firestore
-//     .document("users/{user}") 
-//     .onUpdate((change, context) => {
-//         const newValue = change.after.data()
-//         const previousValue = change.before.data()
-
-//         if (newValue === previousValue) {
-//             return null
-//         }
-
-//         // Update all member documents where the user is a member
-//         let uid = context.params.user
-//         const getDocs = db.collectionGroup("members").where('user.id', "==", uid).get()
-//         return getDocs.then(function(querySnapshot) {
-//             var batch = db.batch(); 
-
-//             querySnapshot.forEach(function(doc) {
-//                 var ref = doc.ref; 
-//                 batch.set(ref, {
-//                     displayName: newValue.displayName,
-//                     photoURL: newValue.photoURL
-//                 }, { merge: true })
-//             })
-
-//             return batch.commit()
-//         })
-//         .catch(error => console.log(error))
-//     })
-
 exports.onCreateFile = functions.firestore
     .document("files/{file}")
     .onCreate((snap, context) => {
         const data = snap.data(); 
         const link = data.link; 
+        const createdBy = data.createdBy; 
+        const createdForFolderID = data.createdForFolderID
         const createdOn = snap.createTime; 
+        let batch = db.batch(); 
 
-        return snap.ref.set({
+        //  Update the file's metadata
+        batch.set(snap.ref, {
             createdOn,
+            createdBy,
+            modifiedOn: createdOn,
+            modifiedBy: createdBy
         }, { merge: true })
-            .then(() => {
-                return grabity.grabIt(link)
-                    .then(result => {
-                        return snap.ref.set({
-                            title: result.title || "",
-                            description: result.description || "",
-                            image: result.image || "",
-                            favicon: result.favicon || ""
-                        }, { merge: true })
-                        .catch(error => console.log(error))
-                    })
-                    .catch(error => console.log(error));
-            })
-            .catch(error => console.log(error))
 
-        // return grabity.grabIt(link)
-        //     .then(result => {
-        //         return snap.ref.set({
-        //             createdOn,
-        //             modifiedOn: createdOn,
-        //             modifiedBy: createdBy,
-        //             title: result.title,
-        //             description: result.description,
-        //             image: result.image,
-        //             favicon: result.favicon
-        //         }, { merge: true })
-        //     })
+        let newFolderFileRef = db.collection("folderFiles").doc() ;
+        batch.set(newFolderFileRef, {
+            "fileID": snap.id,
+            "folderID": createdForFolderID,
+            "createdBy": createdBy,
+            "createdOn": createdOn,
+            "modifiedOn": createdOn,
+            "modifiedBy": createdBy
+        })
+
+        return batch.commit().then(() => {
+            return grabity.grabIt(link).then(result => {
+                return snap.ref.set({
+                    title: result.title || "",
+                    description: result.description || "",
+                    imageURL: result.image || "",
+                    favicon: result.favicon || ""
+                }, { merge: true })
+                .catch(error => console.log(error))
+            })
+            .catch(error => console.log(error));
+        })
+        .catch(error => console.log(error))
     })
 
-// exports.updateCollection = functions.firestore
-//     .document("collections/{collectionId}")
-//     .onUpdate((change, context) => {
-//         const data = change.after.data(); 
-//         const previousData = change.before.data(); 
-//         if (data) {
-//             if (data.name === previousData.name && data.description === previousData.description) {
-//                 return null   
-//             }
+exports.onUpdateFile = functions.firestore
+    .document("files/{fileID}")
+    .onUpdate((change, context) => {
+        const newData = change.after.data(); 
+        const modifiedOn = change.after.updateTime
 
-//             return null; 
+        //  Update all folderFile docs
+        let folderFilesRef = db.collection("folderFiles");
+        return folderFilesRef.where("fileID", "==", context.params.fileID).get()
+            .then(snapshot => {
+                if (snapshot.empty) {
+                    console.log("No matching documents");
+                    return;
+                }
 
-//             // var batch = db.batch(); 
+                let batch = db.batch(); 
 
-//             // Update userToCollection documents
-//             const getDocs = db.collection("userToCollection").where("collection.id", "==", context.params.collectionId).get()
-//             return getDocs.then(function(querySnapshot) {
-//                 querySnapshot.forEach(function(doc) {
-//                     var ref = doc.ref; 
-//                     batch.update(ref, { 
-//                         collection: {
-//                             name: data.name, 
-//                             description: data.description
-//                         }
-//                     })
-//                 })
+                snapshot.forEach(doc => {
+                    let ref = doc.ref
+                    batch.update(ref, {
+                        "link": newData.link,
+                        "title": newData.title,
+                        "imageURL": newData.imageURL,
+                        "modifiedOn": modifiedOn
+                    })
+                })
 
-//                 return batch.commit()
-//             })
-//             .catch(error => console.log(error))
-//         } else {
-//             return null; 
-//         }
-//     })
+                return batch.commit()
+            })
+            .catch(err => {
+                console.log("Error getting documents: ", err)
+            })
+    })
 
 exports.onCreateFolder = functions.firestore
     .document("folders/{folder}")
     .onCreate((snapshot, context) => {
-        return snapshot.ref.set({
-            createdOn: snapshot.createTime,
-        }, { merge: true })
+        const data = snapshot.data(); 
+        const createdBy = data.createdBy; 
+        const createdOn = snapshot.createTime
+        let batch = db.batch();
+
+        //  Update metadata for folder
+        let folderRef = snapshot.ref;
+        batch.set(folderRef, {
+            createdOn,
+            createdBy,
+            modifiedOn: createdOn,
+            modifiedBy: createdBy
+        })
+
+        //  Create a userFolder doc for the user so that the user has a list of folders that they created/followed
+        let userFolderRef = db.collection("userFolders").doc(); 
+        batch.set(userFolderRef, {
+            "folderID": snapshot.id,
+            "userID": createdBy,
+            "title": data.title,
+            "createdOn": createdOn,
+            "createdBy": createdBy,
+            "modifiedOn": createdOn,
+            "modifiedBy": createdBy
+        })        
+
+        return batch.commit()
     })
 
-// exports.updateItem = functions.firestore
-//     .document("items/{itemId}")
-//     .onUpdate((change, context) => {
-//         const data = change.after.data(); 
-//         const previousData = change.before.data(); 
+exports.onUpdateFolder = functions.firestore
+    .document("folders/{folderID}")
+    .onUpdate((change, context) => {
+        const newData = change.after.data(); 
+        const modifiedOn = change.after.updateTime;
 
-//         if (data) {
-//             if (data.title === previousData.title && data.description === previousData.description && data.link === previousData.link) {
-//                 return null
-//             }
+        //  Update all userFolder docs
+        let userFoldersRef = db.collection("userFolders");
+        return userFoldersRef.where("folderID", "==", context.params.folderID).get()
+            .then(snapshot => {
+                if (snapshot.empty) {
+                    console.log("No matching documents");
+                    return;
+                }
 
-//             return null;
+                let batch = db.batch();
 
-//             // var batch = db.batch(); 
+                snapshot.docs.forEach(doc => {
+                    let ref = doc.ref; 
+                    batch.update(ref, {
+                        "title": newData.title,
+                        "modifiedOn": modifiedOn
+                    })
+                })
 
-//             // // Update all subcollections "collectionItems" 
-//             // const getDocs = db.collectionGroup("collectionItems").where("id", "==", context.params.itemId).get();
-//             // return getDocs.then(function(querySnapshot) {
-//             //     querySnapshot.forEach(function(doc) {
-//             //         var ref = doc.ref; 
-//             //         batch.update(ref, { 
-//             //             itemTitle: data.title, 
-//             //             itemDescription: data.description,
-//             //             itemLink: data.link 
-//             //         })
-//             //     })
-//             //     return batch.commit()
-//             // })
-//             // .catch(error => console.log(error))
-//         } else {
-//             return null
-//         }
-//     })
-
-// exports.createUser = functions.auth.user().onCreate((user, context) => {
-//     return db.collection("users").doc(user.uid).set({
-//         email: user.email,
-//         displayName: user.displayName,
-//         phoneNumber: user.phoneNumber,
-//         emailVerified: user.emailVerified,
-//         createdOn: context.timestamp,
-//         modifiedOn: context.timestamp
-//     }, { merge: true })
-// })
+                return batch.commit(); 
+            })
+            .catch(error => {
+                console.log("Error getting documents: ", error)
+            })
+    })
