@@ -21,8 +21,6 @@ exports.onCreateFile = functions.firestore
         batch.set(snap.ref, {
             createdOn,
             createdBy,
-            modifiedOn: createdOn,
-            modifiedBy: createdBy
         }, { merge: true })
 
         let newFolderFileRef = db.collection("folderFiles").doc() ;
@@ -31,8 +29,6 @@ exports.onCreateFile = functions.firestore
             "folderID": createdForFolderID,
             "createdBy": createdBy,
             "createdOn": createdOn,
-            "modifiedOn": createdOn,
-            "modifiedBy": createdBy
         })
 
         return batch.commit().then(() => {
@@ -97,9 +93,7 @@ exports.onCreateFolder = functions.firestore
         batch.set(folderRef, {
             createdOn,
             createdBy,
-            modifiedOn: createdOn,
-            modifiedBy: createdBy
-        })
+        }, { merge: true })
 
         //  Create a userFolder doc for the user so that the user has a list of folders that they created/followed
         let userFolderRef = db.collection("userFolders").doc(); 
@@ -109,8 +103,6 @@ exports.onCreateFolder = functions.firestore
             "title": data.title,
             "createdOn": createdOn,
             "createdBy": createdBy,
-            "modifiedOn": createdOn,
-            "modifiedBy": createdBy
         })        
 
         return batch.commit()
