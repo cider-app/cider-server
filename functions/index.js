@@ -80,6 +80,32 @@ exports.onUpdateFile = functions.firestore
             })
     })
 
+exports.onDeleteFile = functions.firestore 
+    .document("files/{fileID}")
+    .onDelete((snapshot, context) => {
+        //  Update all folderFile docs
+        let folderFilesRef = db.collection("folderFiles");
+        return folderFilesRef.where("fileID", "==", context.params.fileID).get()
+            .then(snapshot => {
+                if (snapshot.empty) {
+                    console.log("No matching documents");
+                    return;
+                }
+
+                let batch = db.batch(); 
+
+                snapshot.forEach(doc => {
+                    let ref = doc.ref
+                    batch.delete(ref)
+                })
+
+                return batch.commit()
+            })
+            .catch(err => {
+                console.log("Error getting documents: ", err)
+            })
+    })
+
 exports.onCreateFolder = functions.firestore
     .document("folders/{folder}")
     .onCreate((snapshot, context) => {
