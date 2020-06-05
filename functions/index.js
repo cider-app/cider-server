@@ -139,3 +139,29 @@ exports.onUpdateFolder = functions.firestore
                 console.log("Error getting documents: ", error)
             })
     })
+
+exports.onDeleteFolder = functions.firestore
+    .document("folders/{folderID}")
+    .onDelete((snapshot, context) => {
+        //  Delete all userFolder docs that reference this folder
+        let userFoldersRef = db.collection("userFolders");
+        return userFoldersRef.where("folderID", "==", context.params.folderID).get()
+            .then(snapshot => {
+                if (snapshot.empty) {
+                    console.log("No matching documents");
+                    return;
+                }
+
+                let batch = db.batch();
+
+                snapshot.docs.forEach(doc => {
+                    let ref = doc.ref; 
+                    batch.delete(ref)
+                })
+
+                return batch.commit(); 
+            })
+            .catch(error => {
+                console.log("Error getting documents: ", error)
+            })
+    })
