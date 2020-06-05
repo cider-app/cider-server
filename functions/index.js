@@ -107,7 +107,7 @@ exports.onDeleteFile = functions.firestore
     })
 
 exports.onCreateFolder = functions.firestore
-    .document("folders/{folder}")
+    .document("folders/{folderID}")
     .onCreate((snapshot, context) => {
         const data = snapshot.data(); 
         const createdBy = data.createdBy; 
