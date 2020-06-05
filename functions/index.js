@@ -83,7 +83,7 @@ exports.onUpdateFile = functions.firestore
 exports.onDeleteFile = functions.firestore 
     .document("files/{fileID}")
     .onDelete((snapshot, context) => {
-        //  Update all folderFile docs
+        //  Delete all folderFile docs referencing this file
         let folderFilesRef = db.collection("folderFiles");
         return folderFilesRef.where("fileID", "==", context.params.fileID).get()
             .then(snapshot => {
