@@ -14,7 +14,6 @@ exports.onCreateFile = functions.firestore
         const data = snap.data(); 
         const link = data.link; 
         const createdBy = data.createdBy; 
-        const createdForFolderID = data.createdForFolderID
         const createdOn = snap.createTime; 
         let batch = db.batch();
 
@@ -28,25 +27,24 @@ exports.onCreateFile = functions.firestore
         let newFolderFileRef = db.collection(CONSTANTS.DATABASE.FOLDERSFILES_COLLECTION_NAME).doc() ;
         batch.set(newFolderFileRef, {
             [CONSTANTS.DATABASE.FILEID_FIELD]: snap.id,
-            [CONSTANTS.DATABASE.FOLDERID_FIELD]: createdForFolderID,
             [CONSTANTS.DATABASE.CREATEDBY_FIELD]: createdBy,
             [CONSTANTS.DATABASE.CREATEDON_FIELD]: createdOn,
         })
 
-        return batch.commit().then(() => {
-            return grabity.grabIt(link).then(result => {
+        return batch.commit()
+            .then(() => {
+                return grabity.grabIt(link)
+            })
+            .then(result => {
                 return snap.ref.set({
                     title: result.title || "",
                     description: result.description || "",
                     imageURL: result.image || "",
                     favicon: result.favicon || ""
                 }, { merge: true })
-                .catch(error => console.log(error))
             })
             .catch(error => console.log(error));
         })
-        .catch(error => console.log(error))
-    })
 
 exports.onUpdateFile = functions.firestore
     .document(`${CONSTANTS.DATABASE.FILES_COLLECTION_NAME}/{fileID}`)
@@ -77,9 +75,7 @@ exports.onUpdateFile = functions.firestore
 
                 return batch.commit()
             })
-            .catch(err => {
-                console.log("Error getting documents: ", err)
-            })
+            .catch(err => console.log("Error getting documents: ", err))
     })
 
 exports.onDeleteFile = functions.firestore 
@@ -103,9 +99,7 @@ exports.onDeleteFile = functions.firestore
 
                 return batch.commit()
             })
-            .catch(err => {
-                console.log("Error getting documents: ", err)
-            })
+            .catch(err => console.log("Error getting documents: ", err))
     })
 
 exports.onCreateFolder = functions.firestore
@@ -163,9 +157,7 @@ exports.onUpdateFolder = functions.firestore
 
                 return batch.commit(); 
             })
-            .catch(error => {
-                console.log("Error getting documents: ", error)
-            })
+            .catch(error => console.log("Error getting documents: ", error))
     })
 
 exports.onDeleteFolder = functions.firestore
@@ -189,7 +181,5 @@ exports.onDeleteFolder = functions.firestore
 
                 return batch.commit(); 
             })
-            .catch(error => {
-                console.log("Error getting documents: ", error)
-            })
+            .catch(error => console.log("Error getting documents: ", error))
     })
