@@ -1,31 +1,31 @@
-const USERS_COLLECTION_NAME = "users";
-const FOLDERS_COLLECTION_NAME = "folders";
-const FILES_COLLECTION_NAME = "files"; 
-const USERSFOLDERS_COLLECTION_NAME = "usersFolders";
-const FOLDERSFILES_COLLECTION_NAME = "foldersFiles"; 
-const MODIFIEDON_FIELD = "modifiedOn";
-const MODIFIEDBY_FIELD = "modifiedBy"; 
-const CREATEDON_FIELD = "createdOn"; 
-const CREATEDBY_FIELD = "createdBy"; 
-const FOLDERID_FIELD = "folderID"; 
-const FOLDERTITLE_FIELD = "folderTitle"; 
-const FILEID_FIELD = "fileID"; 
-const FILETITLE_FIELD = "fileTitle";
-const USERID_FIELD = "userID"; 
+const USERS = "users";
+const FOLDERS = "folders";
+const FILES = "files"; 
+const USERS_FOLDERS = "usersFolders";
+const FOLDERS_FILES = "foldersFiles"; 
+const MODIFIED_ON = "modifiedOn";
+const MODIFIED_BY = "modifiedBy"; 
+const CREATED_ON = "createdOn"; 
+const CREATED_BY = "createdBy"; 
+const FOLDER_ID = "folderID"; 
+const FOLDER_TITLE = "folderTitle"; 
+const FILE_ID = "fileID"; 
+const FILE_TITLE = "fileTitle";
+const USER_ID = "userID"; 
 
 module.exports = {
-    USERS_COLLECTION_NAME,
-    FOLDERS_COLLECTION_NAME,
-    FILES_COLLECTION_NAME,
-    USERSFOLDERS_COLLECTION_NAME,
-    FOLDERSFILES_COLLECTION_NAME,
-    MODIFIEDON_FIELD,
-    MODIFIEDBY_FIELD,
-    CREATEDON_FIELD,
-    CREATEDBY_FIELD,
-    FOLDERID_FIELD,
-    FOLDERTITLE_FIELD,
-    FILEID_FIELD,
-    FILETITLE_FIELD,
-    USERID_FIELD
+    USERS,
+    FOLDERS,
+    FILES,
+    USERS_FOLDERS,
+    FOLDERS_FILES,
+    MODIFIED_ON,
+    MODIFIED_BY,
+    CREATED_ON,
+    CREATED_BY,
+    FOLDER_ID,
+    FOLDER_TITLE,
+    FILE_ID,
+    FILE_TITLE,
+    USER_ID
 }

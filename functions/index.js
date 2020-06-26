@@ -9,7 +9,7 @@ admin.initializeApp();
 const db = admin.firestore(); 
 
 exports.onCreateFile = functions.firestore
-    .document(`${CONSTANTS.DATABASE.FILES_COLLECTION_NAME}/{file}`)
+    .document(`${CONSTANTS.DATABASE.FILES}/{file}`)
     .onCreate((snap, context) => {
         const data = snap.data(); 
         const link = data.link; 
@@ -19,16 +19,16 @@ exports.onCreateFile = functions.firestore
 
         //  Update the file's metadata
         batch.set(snap.ref, {
-            [CONSTANTS.DATABASE.CREATEDBY_FIELD]: createdBy,
-            [CONSTANTS.DATABASE.CREATEDON_FIELD]: createdOn,
+            [CONSTANTS.DATABASE.CREATED_BY]: createdBy,
+            [CONSTANTS.DATABASE.CREATED_ON]: createdOn,
         }, { merge: true })
 
         //  Create an associative FolderFile to associate the file with the folder it's been saved to
-        let newFolderFileRef = db.collection(CONSTANTS.DATABASE.FOLDERSFILES_COLLECTION_NAME).doc() ;
+        let newFolderFileRef = db.collection(CONSTANTS.DATABASE.FOLDERS_FILES).doc() ;
         batch.set(newFolderFileRef, {
-            [CONSTANTS.DATABASE.FILEID_FIELD]: snap.id,
-            [CONSTANTS.DATABASE.CREATEDBY_FIELD]: createdBy,
-            [CONSTANTS.DATABASE.CREATEDON_FIELD]: createdOn,
+            [CONSTANTS.DATABASE.FILE_ID]: snap.id,
+            [CONSTANTS.DATABASE.CREATED_BY]: createdBy,
+            [CONSTANTS.DATABASE.CREATED_ON]: createdOn,
         })
 
         return batch.commit()
@@ -47,14 +47,14 @@ exports.onCreateFile = functions.firestore
         })
 
 exports.onUpdateFile = functions.firestore
-    .document(`${CONSTANTS.DATABASE.FILES_COLLECTION_NAME}/{fileID}`)
+    .document(`${CONSTANTS.DATABASE.FILES}/{fileID}`)
     .onUpdate((change, context) => {
         const newData = change.after.data(); 
         const modifiedOn = change.after.updateTime
 
         //  Update all folderFile docs
-        let folderFilesRef = db.collection(CONSTANTS.DATABASE.FOLDERSFILES_COLLECTION_NAME);
-        return folderFilesRef.where(CONSTANTS.DATABASE.FILEID_FIELD, "==", context.params.fileID).get()
+        let folderFilesRef = db.collection(CONSTANTS.DATABASE.FOLDERS_FILES);
+        return folderFilesRef.where(CONSTANTS.DATABASE.FILE_ID, "==", context.params.fileID).get()
             .then(snapshot => {
                 if (snapshot.empty) {
                     console.log("No matching documents");
@@ -67,9 +67,9 @@ exports.onUpdateFile = functions.firestore
                     let ref = doc.ref
                     batch.update(ref, {
                         "link": newData.link,
-                        [CONSTANTS.DATABASE.FILETITLE_FIELD]: newData.title,
+                        [CONSTANTS.DATABASE.FILE_TITLE]: newData.title,
                         "imageURL": newData.imageURL,
-                        [CONSTANTS.DATABASE.MODIFIEDON_FIELD]: modifiedOn
+                        [CONSTANTS.DATABASE.MODIFIED_ON]: modifiedOn
                     })
                 })
 
@@ -79,11 +79,11 @@ exports.onUpdateFile = functions.firestore
     })
 
 exports.onDeleteFile = functions.firestore 
-    .document(`${CONSTANTS.DATABASE.FILES_COLLECTION_NAME}/{fileID}`)
+    .document(`${CONSTANTS.DATABASE.FILES}/{fileID}`)
     .onDelete((snapshot, context) => {
         //  Delete all folderFile docs referencing this file
-        let folderFilesRef = db.collection(CONSTANTS.DATABASE.FOLDERSFILES_COLLECTION_NAME);
-        return folderFilesRef.where(CONSTANTS.DATABASE.FILEID_FIELD, "==", context.params.fileID).get()
+        let folderFilesRef = db.collection(CONSTANTS.DATABASE.FOLDERS_FILES);
+        return folderFilesRef.where(CONSTANTS.DATABASE.FILE_ID, "==", context.params.fileID).get()
             .then(snapshot => {
                 if (snapshot.empty) {
                     console.log("No matching documents");
@@ -103,7 +103,7 @@ exports.onDeleteFile = functions.firestore
     })
 
 exports.onCreateFolder = functions.firestore
-    .document(`${CONSTANTS.DATABASE.FOLDERS_COLLECTION_NAME}/{folderID}`)
+    .document(`${CONSTANTS.DATABASE.FOLDERS}/{folderID}`)
     .onCreate((snapshot, context) => {
         const data = snapshot.data(); 
         const createdBy = data.createdBy; 
@@ -113,32 +113,32 @@ exports.onCreateFolder = functions.firestore
         //  Update metadata for folder
         let folderRef = snapshot.ref;
         batch.set(folderRef, {
-            [CONSTANTS.DATABASE.CREATEDON_FIELD]: createdOn,
-            [CONSTANTS.DATABASE.CREATEDBY_FIELD]: createdBy,
+            [CONSTANTS.DATABASE.CREATED_ON]: createdOn,
+            [CONSTANTS.DATABASE.CREATED_BY]: createdBy,
         }, { merge: true })
 
         //  Create a userFolder doc for the user so that the user has a list of folders that they created/followed
-        let userFolderRef = db.collection(CONSTANTS.DATABASE.USERSFOLDERS_COLLECTION_NAME).doc(); 
+        let userFolderRef = db.collection(CONSTANTS.DATABASE.USERS_FOLDERS).doc(); 
         batch.set(userFolderRef, {
-            [CONSTANTS.DATABASE.FOLDERID_FIELD]: snapshot.id,
-            [CONSTANTS.DATABASE.USERID_FIELD]: createdBy,
-            [CONSTANTS.DATABASE.FOLDERTITLE_FIELD]: data.title,
-            [CONSTANTS.DATABASE.CREATEDON_FIELD]: createdOn,
-            [CONSTANTS.DATABASE.CREATEDBY_FIELD]: createdBy,
+            [CONSTANTS.DATABASE.FOLDER_ID]: snapshot.id,
+            [CONSTANTS.DATABASE.USER_ID]: createdBy,
+            [CONSTANTS.DATABASE.FOLDER_TITLE]: data.title,
+            [CONSTANTS.DATABASE.CREATED_ON]: createdOn,
+            [CONSTANTS.DATABASE.CREATED_BY]: createdBy,
         })        
 
         return batch.commit()
     })
 
 exports.onUpdateFolder = functions.firestore
-    .document(`${CONSTANTS.DATABASE.FOLDERS_COLLECTION_NAME}/{folderID}`)
+    .document(`${CONSTANTS.DATABASE.FOLDERS}/{folderID}`)
     .onUpdate((change, context) => {
         const newData = change.after.data(); 
         const modifiedOn = change.after.updateTime;
 
         //  Update all userFolder docs
-        let usersFoldersRef = db.collection(CONSTANTS.DATABASE.USERSFOLDERS_COLLECTION_NAME);
-        return usersFoldersRef.where(CONSTANTS.DATABASE.FOLDERID_FIELD, "==", context.params.folderID).get()
+        let usersFoldersRef = db.collection(CONSTANTS.DATABASE.USERS_FOLDERS);
+        return usersFoldersRef.where(CONSTANTS.DATABASE.FOLDER_ID, "==", context.params.folderID).get()
             .then(snapshot => {
                 if (snapshot.empty) {
                     console.log("No matching documents");
@@ -150,8 +150,8 @@ exports.onUpdateFolder = functions.firestore
                 snapshot.docs.forEach(doc => {
                     let ref = doc.ref; 
                     batch.update(ref, {
-                        [CONSTANTS.DATABASE.FOLDERTITLE_FIELD]: newData.title,
-                        [CONSTANTS.DATABASE.MODIFIEDON_FIELD]: modifiedOn
+                        [CONSTANTS.DATABASE.FOLDER_TITLE]: newData.title,
+                        [CONSTANTS.DATABASE.MODIFIED_ON]: modifiedOn
                     })
                 })
 
@@ -161,11 +161,11 @@ exports.onUpdateFolder = functions.firestore
     })
 
 exports.onDeleteFolder = functions.firestore
-    .document(`${CONSTANTS.DATABASE.FOLDERS_COLLECTION_NAME}/{folderID}`)
+    .document(`${CONSTANTS.DATABASE.FOLDERS}/{folderID}`)
     .onDelete((snapshot, context) => {
         //  Delete all userFolder docs that reference this folder
-        let usersFoldersRef = db.collection(CONSTANTS.DATABASE.USERSFOLDERS_COLLECTION_NAME);
-        return usersFoldersRef.where(CONSTANTS.DATABASE.FOLDERID_FIELD, "==", context.params.folderID).get()
+        let usersFoldersRef = db.collection(CONSTANTS.DATABASE.USERS_FOLDERS);
+        return usersFoldersRef.where(CONSTANTS.DATABASE.FOLDER_ID, "==", context.params.folderID).get()
             .then(snapshot => {
                 if (snapshot.empty) {
                     console.log("No matching documents");
