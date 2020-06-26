@@ -13,37 +13,19 @@ exports.onCreateFile = functions.firestore
     .onCreate((snap, context) => {
         const data = snap.data(); 
         const link = data.link; 
-        const createdBy = data.createdBy; 
         const createdOn = snap.createTime; 
-        let batch = db.batch();
 
-        //  Update the file's metadata
-        batch.set(snap.ref, {
-            [CONSTANTS.DATABASE.CREATED_BY]: createdBy,
-            [CONSTANTS.DATABASE.CREATED_ON]: createdOn,
-        }, { merge: true })
-
-        //  Create an associative FolderFile to associate the file with the folder it's been saved to
-        let newFolderFileRef = db.collection(CONSTANTS.DATABASE.FOLDERS_FILES).doc() ;
-        batch.set(newFolderFileRef, {
-            [CONSTANTS.DATABASE.FILE_ID]: snap.id,
-            [CONSTANTS.DATABASE.CREATED_BY]: createdBy,
-            [CONSTANTS.DATABASE.CREATED_ON]: createdOn,
-        })
-
-        return batch.commit()
-            .then(() => {
-                return grabity.grabIt(link)
-            })
+        return grabity.grabIt(link)
             .then(result => {
                 return snap.ref.set({
-                    title: result.title || "",
-                    description: result.description || "",
-                    imageURL: result.image || "",
-                    favicon: result.favicon || ""
+                    [CONSTANTS.DATABASE.TITLE]: result.title,
+                    [CONSTANTS.DATABASE.DESCRIPTION]: result.description,
+                    [CONSTANTS.DATABASE.IMAGE_URL]: result.image,
+                    [CONSTANTS.DATABASE.FAVICON]: result.favicon,
+                    [CONSTANTS.DATABASE.CREATED_ON]: createdOn
                 }, { merge: true })
             })
-            .catch(error => console.log(error));
+            .catch(error => console.log(error))
         })
 
 exports.onUpdateFile = functions.firestore
@@ -66,9 +48,8 @@ exports.onUpdateFile = functions.firestore
                 snapshot.forEach(doc => {
                     let ref = doc.ref
                     batch.update(ref, {
-                        "link": newData.link,
-                        [CONSTANTS.DATABASE.FILE_TITLE]: newData.title,
-                        "imageURL": newData.imageURL,
+                        [CONSTANTS.DATABASE.FILE_TITLE]: newData[CONSTANTS.DATABASE.TITLE],
+                        [CONSTANTS.DATABASE.IMAGE_URL]: newData[CONSTANTS.DATABASE.IMAGE_URL],
                         [CONSTANTS.DATABASE.MODIFIED_ON]: modifiedOn
                     })
                 })

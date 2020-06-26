@@ -27,5 +27,10 @@ module.exports = {
     FOLDER_TITLE,
     FILE_ID,
     FILE_TITLE,
-    USER_ID
+    USER_ID,
+    LINK: "link",
+    IMAGE_URL: "imageURL",
+    TITLE: "title",
+    DESCRIPTION: "description",
+    FAVICON: "favicon"
 }
