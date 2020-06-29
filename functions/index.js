@@ -13,6 +13,7 @@ exports.onCreateFile = functions.firestore
     .onCreate((snap, context) => {
         const data = snap.data(); 
         const link = data.link; 
+        const createdBy = data.createdBy;
         const createdOn = snap.createTime; 
 
         return grabity.grabIt(link)
@@ -22,7 +23,9 @@ exports.onCreateFile = functions.firestore
                     [CONSTANTS.DATABASE.DESCRIPTION]: result.description,
                     [CONSTANTS.DATABASE.IMAGE_URL]: result.image,
                     [CONSTANTS.DATABASE.FAVICON]: result.favicon,
-                    [CONSTANTS.DATABASE.CREATED_ON]: createdOn
+                    [CONSTANTS.DATABASE.CREATED_ON]: createdOn,
+                    [CONSTANTS.DATABASE.CREATED_BY]: createdBy,
+                    [CONSTANTS.DATABASE.MODIFIED_ON]: createdOn
                 }, { merge: true })
             })
             .catch(error => console.log(error))
@@ -96,6 +99,7 @@ exports.onCreateFolder = functions.firestore
         batch.set(folderRef, {
             [CONSTANTS.DATABASE.CREATED_ON]: createdOn,
             [CONSTANTS.DATABASE.CREATED_BY]: createdBy,
+            [CONSTANTS.DATABASE.MODIFIED_ON]: createdOn
         }, { merge: true })
 
         //  Create a userFolder doc for the user so that the user has a list of folders that they created/followed
@@ -163,4 +167,12 @@ exports.onDeleteFolder = functions.firestore
                 return batch.commit(); 
             })
             .catch(error => console.log("Error getting documents: ", error))
+    })
+
+exports.onCreateFolderFile = functions.firestore
+    .document(`${CONSTANTS.DATABASE.FOLDERS_FILES}/{folderFileID}`)
+    .onCreate((snapshot, context) => {
+        return snapshot.ref.set({
+            [CONSTANTS.DATABASE.CREATED_ON]: snapshot.createTime
+        }, { merge: true })
     })
