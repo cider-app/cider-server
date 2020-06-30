@@ -92,27 +92,11 @@ exports.onCreateFolder = functions.firestore
         const data = snapshot.data(); 
         const createdBy = data.createdBy; 
         const createdOn = snapshot.createTime
-        let batch = db.batch();
-
-        //  Update metadata for folder
-        let folderRef = snapshot.ref;
-        batch.set(folderRef, {
+        
+        return snapshot.ref.set({
             [CONSTANTS.DATABASE.CREATED_ON]: createdOn,
-            [CONSTANTS.DATABASE.CREATED_BY]: createdBy,
             [CONSTANTS.DATABASE.MODIFIED_ON]: createdOn
         }, { merge: true })
-
-        //  Create a userFolder doc for the user so that the user has a list of folders that they created/followed
-        let userFolderRef = db.collection(CONSTANTS.DATABASE.USERS_FOLDERS).doc(); 
-        batch.set(userFolderRef, {
-            [CONSTANTS.DATABASE.FOLDER_ID]: snapshot.id,
-            [CONSTANTS.DATABASE.USER_ID]: createdBy,
-            [CONSTANTS.DATABASE.FOLDER_TITLE]: data.title,
-            [CONSTANTS.DATABASE.CREATED_ON]: createdOn,
-            [CONSTANTS.DATABASE.CREATED_BY]: createdBy,
-        })        
-
-        return batch.commit()
     })
 
 exports.onUpdateFolder = functions.firestore
@@ -172,7 +156,11 @@ exports.onDeleteFolder = functions.firestore
 exports.onCreateFolderFile = functions.firestore
     .document(`${CONSTANTS.DATABASE.FOLDERS_FILES}/{folderFileID}`)
     .onCreate((snapshot, context) => {
-        return snapshot.ref.set({
-            [CONSTANTS.DATABASE.CREATED_ON]: snapshot.createTime
-        }, { merge: true })
+        return snapshot.ref.update({ [CONSTANTS.DATABASE.CREATED_ON]: snapshot.createTime })
+    })
+
+exports.onCreateUserFolder = functions.firestore
+    .document(`${CONSTANTS.DATABASE.USERS_FOLDERS}/{userFolderID}`)
+    .onCreate((snapshot, context) => {
+        return snapshot.ref.update({ [CONSTANTS.DATABASE.CREATED_ON]: snapshot.createTime })
     })
