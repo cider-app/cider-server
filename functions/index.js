@@ -19,10 +19,10 @@ exports.onCreateFile = functions.firestore
         return grabity.grabIt(link)
             .then(result => {
                 return snap.ref.set({
-                    [CONSTANTS.DATABASE.TITLE]: result.title,
-                    [CONSTANTS.DATABASE.DESCRIPTION]: result.description,
-                    [CONSTANTS.DATABASE.IMAGE_URL]: result.image,
-                    [CONSTANTS.DATABASE.FAVICON]: result.favicon,
+                    [CONSTANTS.DATABASE.TITLE]: result.title ? result.title : '',
+                    [CONSTANTS.DATABASE.DESCRIPTION]: result.description ? result.description : '',
+                    [CONSTANTS.DATABASE.IMAGE_URL]: result.image ? result.image : '',
+                    [CONSTANTS.DATABASE.FAVICON]: result.favicon ? result.favicon : '',
                     [CONSTANTS.DATABASE.CREATED_ON]: createdOn,
                     [CONSTANTS.DATABASE.CREATED_BY]: createdBy,
                     [CONSTANTS.DATABASE.MODIFIED_ON]: createdOn
