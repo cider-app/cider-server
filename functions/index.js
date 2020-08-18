@@ -1,5 +1,6 @@
 const functions = require('firebase-functions');
-const CONSTANTS = require('./constants')
+const CONSTANTS = require('./constants');
+const dynamicLinksApi = require('./api/dynamicLinks');
 let grabity = require('grabity'); 
 
 //Establish connection to Firestore
@@ -90,13 +91,25 @@ exports.onCreateFolder = functions.firestore
     .document(`${CONSTANTS.DATABASE.FOLDERS}/{folderID}`)
     .onCreate((snapshot, context) => {
         const data = snapshot.data(); 
-        const createdBy = data.createdBy; 
         const createdOn = snapshot.createTime
         
         return snapshot.ref.set({
             [CONSTANTS.DATABASE.CREATED_ON]: createdOn,
             [CONSTANTS.DATABASE.MODIFIED_ON]: createdOn
         }, { merge: true })
+        .then(function() {
+            return dynamicLinksApi.createLinkForFolder(context.params.folderID)
+        })
+        .then(function(response) {
+            const data = response.data; 
+
+            return snapshot.ref.set({
+                [CONSTANTS.DATABASE.SHARE_LINK]: data["shortLink"]
+            }, { merge: true })
+        })
+        .catch(function(error) { 
+            console.log(error)
+        })
     })
 
 exports.onUpdateFolder = functions.firestore
