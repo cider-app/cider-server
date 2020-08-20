@@ -97,19 +97,19 @@ exports.onCreateFolder = functions.firestore
             [CONSTANTS.DATABASE.CREATED_ON]: createdOn,
             [CONSTANTS.DATABASE.MODIFIED_ON]: createdOn
         }, { merge: true })
-        .then(function() {
-            return dynamicLinksApi.createLinkForFolder(context.params.folderID)
-        })
-        .then(function(response) {
-            const data = response.data; 
+        // .then(function() {
+        //     return dynamicLinksApi.createLinkForFolder(context.params.folderID)
+        // })
+        // .then(function(response) {
+        //     const data = response.data; 
 
-            return snapshot.ref.set({
-                [CONSTANTS.DATABASE.SHARE_LINK]: data["shortLink"]
-            }, { merge: true })
-        })
-        .catch(function(error) { 
-            console.log(error)
-        })
+        //     return snapshot.ref.set({
+        //         [CONSTANTS.DATABASE.SHARE_LINK]: data["shortLink"]
+        //     }, { merge: true })
+        // })
+        // .catch(function(error) { 
+        //     console.log(error)
+        // })
     })
 
 exports.onUpdateFolder = functions.firestore
