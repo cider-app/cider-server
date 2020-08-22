@@ -1,6 +1,7 @@
 const functions = require('firebase-functions');
 const CONSTANTS = require('./constants');
 const dynamicLinksApi = require('./api/dynamicLinks');
+const algoliasearch = require('algoliasearch'); 
 let grabity = require('grabity'); 
 
 //Establish connection to Firestore
@@ -8,6 +9,13 @@ const admin = require('firebase-admin');
 admin.initializeApp(); 
 
 const db = admin.firestore(); 
+
+// App ID and API Key are stored in functions config variables
+const ALGOLIA_ID = functions.config().algolia.app_id;
+const ALGOLIA_ADMIN_KEY = functions.config().algolia.api_key; 
+const ALGOLIA_SEARCH_KEY = functions.config().algolia.search_key; 
+
+const client = algoliasearch(ALGOLIA_ID, ALGOLIA_ADMIN_KEY);
 
 exports.onCreateFile = functions.firestore
     .document(`${CONSTANTS.DATABASE.FILES}/{file}`)
@@ -176,4 +184,17 @@ exports.onCreateUserFolder = functions.firestore
     .document(`${CONSTANTS.DATABASE.USERS_FOLDERS}/{userFolderID}`)
     .onCreate((snapshot, context) => {
         return snapshot.ref.update({ [CONSTANTS.DATABASE.CREATED_ON]: snapshot.createTime })
+    })
+
+exports.onCreateUser = functions.firestore
+    .document(`${CONSTANTS.DATABASE.USERS}/{userID}`)
+    .onCreate((snapshot, context) => {
+        const data = snapshot.data(); 
+
+        // Add an 'objectID' field which Algolia requires
+        data.objectID = context.params.userID; 
+
+        // Write to the algolia index
+        const index = client.initIndex(CONSTANTS.DATABASE.USERS); 
+        return index.saveObject(data);
     })
