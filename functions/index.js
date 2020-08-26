@@ -186,15 +186,13 @@ exports.onCreateUserFolder = functions.firestore
         return snapshot.ref.update({ [CONSTANTS.DATABASE.CREATED_ON]: snapshot.createTime })
     })
 
-exports.onCreateUser = functions.firestore
-    .document(`${CONSTANTS.DATABASE.USERS}/{userID}`)
-    .onCreate((snapshot, context) => {
-        const data = snapshot.data(); 
+exports.createAlgoliaUserIndex = functions.auth.user().onCreate((user) => {
+    var newUser = user;
 
-        // Add an 'objectID' field which Algolia requires
-        data.objectID = context.params.userID; 
+    // Add an 'objectID' field which Algolia requires
+    newUser.objectID = user.uid; 
 
-        // Write to the algolia index
-        const index = client.initIndex(CONSTANTS.DATABASE.USERS); 
-        return index.saveObject(data);
-    })
+    // Write to the algolia index
+    const index = client.initIndex(CONSTANTS.DATABASE.USERS); 
+    return index.saveObject(newUser);
+})
