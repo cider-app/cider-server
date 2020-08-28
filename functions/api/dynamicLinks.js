@@ -18,7 +18,7 @@ exports.createLinkForFolder = function(folderId) {
                     }
                 },
                 "suffix": {
-                    "option": "SHORT"
+                    "option": "UNGUESSABLE"
                 }
             },
             headers: {
