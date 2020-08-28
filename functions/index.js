@@ -98,26 +98,25 @@ exports.onDeleteFile = functions.firestore
 exports.onCreateFolder = functions.firestore
     .document(`${CONSTANTS.DATABASE.FOLDERS}/{folderID}`)
     .onCreate((snapshot, context) => {
-        const data = snapshot.data(); 
         const createdOn = snapshot.createTime
         
         return snapshot.ref.set({
             [CONSTANTS.DATABASE.CREATED_ON]: createdOn,
             [CONSTANTS.DATABASE.MODIFIED_ON]: createdOn
         }, { merge: true })
-        // .then(function() {
-        //     return dynamicLinksApi.createLinkForFolder(context.params.folderID)
-        // })
-        // .then(function(response) {
-        //     const data = response.data; 
+    })
 
-        //     return snapshot.ref.set({
-        //         [CONSTANTS.DATABASE.SHARE_LINK]: data["shortLink"]
-        //     }, { merge: true })
-        // })
-        // .catch(function(error) { 
-        //     console.log(error)
-        // })
+exports.createFolderShareLink = functions.firestore 
+    .document(`${CONSTANTS.DATABASE.FOLDERS}/{folderID}`)
+    .onCreate((snapshot, context) => {
+        return dynamicLinksApi.createLinkForFolder(context.params.folderID)
+        .then(function(response) {
+            const data = response.data; 
+
+            return snapshot.ref.set({
+                [CONSTANTS.DATABASE.SHARE_LINK]: data["shortLink"]
+            }, { merge: true })
+        })
     })
 
 exports.onUpdateFolder = functions.firestore
