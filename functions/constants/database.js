@@ -33,5 +33,6 @@ module.exports = {
     TITLE: "title",
     DESCRIPTION: "description",
     FAVICON: "favicon",
-    SHARE_LINK: "shareLink"
+    SHARE_LINK: "shareLink",
+    CREATED_BY_USER_ID: "createdByUserID"
 }

@@ -22,7 +22,7 @@ exports.onCreateFile = functions.firestore
     .onCreate((snap, context) => {
         const data = snap.data(); 
         const link = data.link; 
-        const createdBy = data.createdBy;
+        const createdByUserID = data[CONSTANTS.DATABASE.CREATED_BY_USER_ID];
         const createdOn = snap.createTime; 
 
         return grabity.grabIt(link)
@@ -33,7 +33,7 @@ exports.onCreateFile = functions.firestore
                     [CONSTANTS.DATABASE.IMAGE_URL]: result.image ? result.image : '',
                     [CONSTANTS.DATABASE.FAVICON]: result.favicon ? result.favicon : '',
                     [CONSTANTS.DATABASE.CREATED_ON]: createdOn,
-                    [CONSTANTS.DATABASE.CREATED_BY]: createdBy,
+                    [CONSTANTS.DATABASE.CREATED_BY_USER_ID]: createdByUserID,
                     [CONSTANTS.DATABASE.MODIFIED_ON]: createdOn
                 }, { merge: true })
             })
