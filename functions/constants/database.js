@@ -27,6 +27,7 @@ module.exports = {
     FOLDER_TITLE,
     FILE_ID,
     FILE_TITLE,
+    FILE_IMAGE_URL: "fileImageURL",
     USER_ID,
     LINK: "link",
     IMAGE_URL: "imageURL",

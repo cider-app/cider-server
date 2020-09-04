@@ -31,8 +31,8 @@ exports.onCreateFile = functions.firestore
 exports.grabLinkMetadata = functions.firestore
     .document(`${CONSTANTS.DATABASE.FILES}/{file}`)
     .onCreate((snap, context) => {
-        const data = snap.data();
-        const link = data[CONSTANTS.DATABASE.LINK];
+        const data = snap.data(); 
+        const link = data.link; 
 
         return grabity.grabIt(link)
             .then(result => {
@@ -67,7 +67,7 @@ exports.onUpdateFile = functions.firestore
                     let ref = doc.ref
                     batch.update(ref, {
                         [CONSTANTS.DATABASE.FILE_TITLE]: newData[CONSTANTS.DATABASE.TITLE],
-                        [CONSTANTS.DATABASE.IMAGE_URL]: newData[CONSTANTS.DATABASE.IMAGE_URL],
+                        [CONSTANTS.DATABASE.FILE_IMAGE_URL]: newData[CONSTANTS.DATABASE.IMAGE_URL],
                         [CONSTANTS.DATABASE.MODIFIED_ON]: modifiedOn
                     })
                 })
