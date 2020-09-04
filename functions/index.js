@@ -21,23 +21,25 @@ exports.onCreateFile = functions.firestore
     .document(`${CONSTANTS.DATABASE.FILES}/{file}`)
     .onCreate((snap, context) => {
         const data = snap.data(); 
-        const link = data.link; 
-        const createdByUserID = data[CONSTANTS.DATABASE.CREATED_BY_USER_ID];
         const createdOn = snap.createTime; 
 
-        return grabity.grabIt(link)
-            .then(result => {
-                return snap.ref.set({
-                    [CONSTANTS.DATABASE.TITLE]: result.title ? result.title : '',
-                    [CONSTANTS.DATABASE.DESCRIPTION]: result.description ? result.description : '',
-                    [CONSTANTS.DATABASE.IMAGE_URL]: result.image ? result.image : '',
-                    [CONSTANTS.DATABASE.FAVICON]: result.favicon ? result.favicon : '',
-                    [CONSTANTS.DATABASE.CREATED_ON]: createdOn,
-                    [CONSTANTS.DATABASE.CREATED_BY_USER_ID]: createdByUserID,
-                    [CONSTANTS.DATABASE.MODIFIED_ON]: createdOn
-                }, { merge: true })
-            })
-            .catch(error => console.log(error))
+        return snap.ref.set({
+            [CONSTANTS.DATABASE.CREATED_ON]: createdOn,
+            [CONSTANTS.DATABASE.MODIFIED_ON]: createdOn
+        }, { merge: true })
+
+        // return grabity.grabIt(link)
+        //     .then(result => {
+        //         return snap.ref.set({
+        //             [CONSTANTS.DATABASE.TITLE]: result.title ? result.title : '',
+        //             [CONSTANTS.DATABASE.DESCRIPTION]: result.description ? result.description : '',
+        //             [CONSTANTS.DATABASE.IMAGE_URL]: result.image ? result.image : '',
+        //             [CONSTANTS.DATABASE.FAVICON]: result.favicon ? result.favicon : '',
+        //             [CONSTANTS.DATABASE.CREATED_ON]: createdOn,
+        //             [CONSTANTS.DATABASE.MODIFIED_ON]: createdOn
+        //         }, { merge: true })
+        //     })
+        //     .catch(error => console.log(error))
         })
 
 exports.onUpdateFile = functions.firestore
