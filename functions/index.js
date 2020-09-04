@@ -20,27 +20,31 @@ const client = algoliasearch(ALGOLIA_ID, ALGOLIA_ADMIN_KEY);
 exports.onCreateFile = functions.firestore
     .document(`${CONSTANTS.DATABASE.FILES}/{file}`)
     .onCreate((snap, context) => {
-        const data = snap.data(); 
         const createdOn = snap.createTime; 
 
         return snap.ref.set({
             [CONSTANTS.DATABASE.CREATED_ON]: createdOn,
             [CONSTANTS.DATABASE.MODIFIED_ON]: createdOn
         }, { merge: true })
+    })
 
-        // return grabity.grabIt(link)
-        //     .then(result => {
-        //         return snap.ref.set({
-        //             [CONSTANTS.DATABASE.TITLE]: result.title ? result.title : '',
-        //             [CONSTANTS.DATABASE.DESCRIPTION]: result.description ? result.description : '',
-        //             [CONSTANTS.DATABASE.IMAGE_URL]: result.image ? result.image : '',
-        //             [CONSTANTS.DATABASE.FAVICON]: result.favicon ? result.favicon : '',
-        //             [CONSTANTS.DATABASE.CREATED_ON]: createdOn,
-        //             [CONSTANTS.DATABASE.MODIFIED_ON]: createdOn
-        //         }, { merge: true })
-        //     })
-        //     .catch(error => console.log(error))
-        })
+exports.grabLinkMetadata = functions.firestore
+    .document(`${CONSTANTS.DATABASE.FILES}/{file}`)
+    .onCreate((snap, context) => {
+        const data = snap.data();
+        const link = data[CONSTANTS.DATABASE.LINK];
+
+        return grabity.grabIt(link)
+            .then(result => {
+                return snap.ref.set({
+                    [CONSTANTS.DATABASE.TITLE]: result.title ? result.title : '',
+                    [CONSTANTS.DATABASE.DESCRIPTION]: result.description ? result.description : '',
+                    [CONSTANTS.DATABASE.IMAGE_URL]: result.image ? result.image : '',
+                    [CONSTANTS.DATABASE.FAVICON]: result.favicon ? result.favicon : '',
+                }, { merge: true })
+            })
+            .catch(error => console.log(error))
+    })
 
 exports.onUpdateFile = functions.firestore
     .document(`${CONSTANTS.DATABASE.FILES}/{fileID}`)
