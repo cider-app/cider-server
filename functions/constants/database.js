@@ -16,6 +16,7 @@ module.exports = {
     IMAGE_URL: "image_url",
     TITLE: "title",
     DESCRIPTION: "description",
+    SECRET: "secret",
     FAVICON: "favicon",
     SHARE_LINK: "share_link",
 }

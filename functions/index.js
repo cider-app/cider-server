@@ -125,35 +125,38 @@ exports.onCreateFolder = functions.firestore
 //         })
 //     })
 
-// exports.onUpdateFolder = functions.firestore
-//     .document(`${CONSTANTS.DATABASE.FOLDERS}/{folderID}`)
-//     .onUpdate((change, context) => {
-//         const newData = change.after.data(); 
-//         const modifiedOn = change.after.updateTime;
+exports.onUpdateFolder = functions.firestore
+    .document(`${CONSTANTS.DATABASE.FOLDERS}/{folderID}`)
+    .onUpdate((change, context) => {
+        const newData = change.after.data(); 
+        const modifiedOn = change.after.updateTime;
 
-//         //  Update all userFolder docs
-//         let usersFoldersRef = db.collection(CONSTANTS.DATABASE.USERS_FOLDERS);
-//         return usersFoldersRef.where(CONSTANTS.DATABASE.FOLDER_ID, "==", context.params.folderID).get()
-//             .then(snapshot => {
-//                 if (snapshot.empty) {
-//                     console.log("No matching documents");
-//                     return;
-//                 }
+        //  Update all userFolder docs
+        let ref = db.collectionGroup(CONSTANTS.DATABASE.USER_FOLDERS);
+        return ref.where(CONSTANTS.DATABASE.FOLDER_ID, "==", context.params.folderID)
+            .get()
+            .then(snapshot => {
+                if (snapshot.empty) {
+                    console.log("No matching documents");
+                    return;
+                }
 
-//                 let batch = db.batch();
+                let batch = db.batch();
 
-//                 snapshot.docs.forEach(doc => {
-//                     let ref = doc.ref; 
-//                     batch.update(ref, {
-//                         [CONSTANTS.DATABASE.FOLDER_TITLE]: newData.title,
-//                         [CONSTANTS.DATABASE.MODIFIED_ON]: modifiedOn
-//                     })
-//                 })
+                snapshot.docs.forEach(doc => {
+                    let ref = doc.ref; 
+                    batch.update(ref, {
+                        [CONSTANTS.DATABASE.TITLE]: newData[CONSTANTS.DATABASE.TITLE],
+                        [CONSTANTS.DATABASE.DESCRIPTION]: newData[CONSTANTS.DATABASE.DESCRIPTION],
+                        [CONSTANTS.DATABASE.SECRET]: newData[CONSTANTS.DATABASE.SECRET],
+                        [CONSTANTS.DATABASE.MODIFIED_ON]: modifiedOn
+                    })
+                })
 
-//                 return batch.commit(); 
-//             })
-//             .catch(error => console.log("Error getting documents: ", error))
-//     })
+                return batch.commit(); 
+            })
+            .catch(error => console.log("Error getting documents: ", error))
+    })
 
 // exports.onDeleteFolder = functions.firestore
 //     .document(`${CONSTANTS.DATABASE.FOLDERS}/{folderID}`)
