@@ -129,7 +129,17 @@ exports.onUpdateFolder = functions.firestore
     .document(`${CONSTANTS.DATABASE.FOLDERS}/{folderID}`)
     .onUpdate((change, context) => {
         const newData = change.after.data(); 
+        const prevData = change.before.data(); 
         const modifiedOn = change.after.updateTime;
+
+        //  Don't execute if there are no changes to the folder's title, description, or secret 
+        if (
+            newData[CONSTANTS.DATABASE.TITLE] === prevData[CONSTANTS.DATABASE.TITLE] &&
+            newData[CONSTANTS.DATABASE.DESCRIPTION] === prevData[CONSTANTS.DATABASE.DESCRIPTION] &&
+            newData[CONSTANTS.DATABASE.SECRET] === prevData[CONSTANTS.DATABASE.SECRET] 
+            ) {
+            return null
+        }
 
         //  Update all userFolder docs
         let ref = db.collectionGroup(CONSTANTS.DATABASE.USER_FOLDERS);
@@ -158,29 +168,28 @@ exports.onUpdateFolder = functions.firestore
             .catch(error => console.log("Error getting documents: ", error))
     })
 
-// exports.onDeleteFolder = functions.firestore
-//     .document(`${CONSTANTS.DATABASE.FOLDERS}/{folderID}`)
-//     .onDelete((snapshot, context) => {
-//         //  Delete all userFolder docs that reference this folder
-//         let usersFoldersRef = db.collection(CONSTANTS.DATABASE.USERS_FOLDERS);
-//         return usersFoldersRef.where(CONSTANTS.DATABASE.FOLDER_ID, "==", context.params.folderID).get()
-//             .then(snapshot => {
-//                 if (snapshot.empty) {
-//                     console.log("No matching documents");
-//                     return;
-//                 }
+exports.onDeleteFolder = functions.firestore
+    .document(`${CONSTANTS.DATABASE.FOLDERS}/{folderID}`)
+    .onDelete((snapshot, context) => {
+        //  Delete all user_folders docs that reference this folder
+        return db.collectionGroup(CONSTANTS.DATABASE.USER_FOLDERS).where(CONSTANTS.DATABASE.FOLDER_ID, "==", context.params.folderID).get()
+            .then(snapshot => {
+                if (snapshot.empty) {
+                    console.log("No matching documents");
+                    return;
+                }
 
-//                 let batch = db.batch();
+                let batch = db.batch();
 
-//                 snapshot.docs.forEach(doc => {
-//                     let ref = doc.ref; 
-//                     batch.delete(ref)
-//                 })
+                snapshot.docs.forEach(doc => {
+                    let ref = doc.ref; 
+                    batch.delete(ref)
+                })
 
-//                 return batch.commit(); 
-//             })
-//             .catch(error => console.log("Error getting documents: ", error))
-//     })
+                return batch.commit(); 
+            })
+            .catch(error => console.log("Error getting documents: ", error))
+    })
 
 exports.onCreateFolderFile = functions.firestore
     .document(`${CONSTANTS.DATABASE.FOLDERS_FILES}/{folderFileID}`)
