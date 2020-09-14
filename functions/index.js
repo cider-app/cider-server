@@ -28,23 +28,23 @@ const client = algoliasearch(ALGOLIA_ID, ALGOLIA_ADMIN_KEY);
 //         }, { merge: true })
 //     })
 
-// exports.grabLinkMetadata = functions.firestore
-//     .document(`${CONSTANTS.DATABASE.FILES}/{file}`)
-//     .onCreate((snap, context) => {
-//         const data = snap.data(); 
-//         const link = data.link; 
+exports.grabLinkMetadata = functions.firestore
+    .document(`${CONSTANTS.DATABASE.FOLDERS}/{folderId}/${CONSTANTS.DATABASE.FOLDER_FILES}/{folderFileId}`)
+    .onCreate((snap, context) => {
+        const data = snap.data(); 
+        const link = data.link; 
 
-//         return grabity.grabIt(link)
-//             .then(result => {
-//                 return snap.ref.set({
-//                     [CONSTANTS.DATABASE.TITLE]: result.title ? result.title : '',
-//                     [CONSTANTS.DATABASE.DESCRIPTION]: result.description ? result.description : '',
-//                     [CONSTANTS.DATABASE.IMAGE_URL]: result.image ? result.image : '',
-//                     [CONSTANTS.DATABASE.FAVICON]: result.favicon ? result.favicon : '',
-//                 }, { merge: true })
-//             })
-//             .catch(error => console.log(error))
-//     })
+        return grabity.grabIt(link)
+            .then(result => {
+                return snap.ref.set({
+                    [CONSTANTS.DATABASE.TITLE]: result.title ? result.title : '',
+                    [CONSTANTS.DATABASE.DESCRIPTION]: result.description ? result.description : '',
+                    [CONSTANTS.DATABASE.IMAGE_URL]: result.image ? result.image : '',
+                    [CONSTANTS.DATABASE.FAVICON]: result.favicon ? result.favicon : '',
+                }, { merge: true })
+            })
+            .catch(error => console.log(error))
+    })
 
 // exports.onUpdateFile = functions.firestore
 //     .document(`${CONSTANTS.DATABASE.FILES}/{fileID}`)
@@ -192,16 +192,21 @@ exports.onDeleteFolder = functions.firestore
     })
 
 exports.onCreateFolderFile = functions.firestore
-    .document(`${CONSTANTS.DATABASE.FOLDERS_FILES}/{folderFileID}`)
+    .document(`${CONSTANTS.DATABASE.FOLDERS}/{folderId}/${CONSTANTS.DATABASE.FOLDER_FILES}/{folderFileId}`)
     .onCreate((snapshot, context) => {
-        return snapshot.ref.update({ [CONSTANTS.DATABASE.CREATED_ON]: snapshot.createTime })
+        const createdOn = snapshot.createTime;
+
+        return snapshot.ref.update({ 
+            [CONSTANTS.DATABASE.CREATED_ON]: createdOn,
+            [CONSTANTS.DATABASE.MODIFIED_ON]: createdOn
+        })
     })
 
-exports.onCreateUserFolder = functions.firestore
-    .document(`${CONSTANTS.DATABASE.USERS_FOLDERS}/{userFolderID}`)
-    .onCreate((snapshot, context) => {
-        return snapshot.ref.update({ [CONSTANTS.DATABASE.CREATED_ON]: snapshot.createTime })
-    })
+// exports.onCreateUserFolder = functions.firestore
+//     .document(`${CONSTANTS.DATABASE.USERS_FOLDERS}/{userFolderID}`)
+//     .onCreate((snapshot, context) => {
+//         return snapshot.ref.update({ [CONSTANTS.DATABASE.CREATED_ON]: snapshot.createTime })
+//     })
 
 // exports.createAlgoliaUserIndex = functions.auth.user().onCreate((user) => {
 //     var newUser = user;
