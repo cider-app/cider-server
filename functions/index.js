@@ -6,6 +6,7 @@ let grabity = require('grabity');
 
 //Establish connection to Firestore
 const admin = require('firebase-admin');
+const { DATABASE } = require('./constants');
 admin.initializeApp(); 
 
 const db = admin.firestore(); 
@@ -136,7 +137,8 @@ exports.onUpdateFolder = functions.firestore
         if (
             newData[CONSTANTS.DATABASE.TITLE] === prevData[CONSTANTS.DATABASE.TITLE] &&
             newData[CONSTANTS.DATABASE.DESCRIPTION] === prevData[CONSTANTS.DATABASE.DESCRIPTION] &&
-            newData[CONSTANTS.DATABASE.SECRET] === prevData[CONSTANTS.DATABASE.SECRET] 
+            newData[CONSTANTS.DATABASE.SECRET] === prevData[CONSTANTS.DATABASE.SECRET] && 
+            newData[CONSTANTS.DATABASE.EMOJI] === prevData[CONSTANTS.DATABASE.EMOJI]
             ) {
             return null
         }
@@ -159,6 +161,7 @@ exports.onUpdateFolder = functions.firestore
                         [CONSTANTS.DATABASE.TITLE]: newData[CONSTANTS.DATABASE.TITLE],
                         [CONSTANTS.DATABASE.DESCRIPTION]: newData[CONSTANTS.DATABASE.DESCRIPTION],
                         [CONSTANTS.DATABASE.SECRET]: newData[CONSTANTS.DATABASE.SECRET],
+                        [CONSTANTS.DATABASE.EMOJI]: newData[CONSTANTS.DATABASE.EMOJI],
                         [CONSTANTS.DATABASE.MODIFIED_ON]: modifiedOn
                     })
                 })

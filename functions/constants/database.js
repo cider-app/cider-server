@@ -19,4 +19,5 @@ module.exports = {
     SECRET: "secret",
     FAVICON: "favicon",
     SHARE_LINK: "share_link",
+    EMOJI: "emoji"
 }
