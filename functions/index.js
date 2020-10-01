@@ -126,7 +126,7 @@ exports.onCreateFolder = functions.firestore
 //         })
 //     })
 
-exports.onUpdateFolder = functions.firestore
+exports.updateUserFolders = functions.firestore
     .document(`${CONSTANTS.DATABASE.FOLDERS}/{folderID}`)
     .onUpdate((change, context) => {
         const newData = change.after.data(); 
