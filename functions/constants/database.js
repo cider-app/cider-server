@@ -19,5 +19,6 @@ module.exports = {
     SECRET: "secret",
     FAVICON: "favicon",
     SHARE_LINK: "share_link",
-    EMOJI: "emoji"
+    EMOJI: "emoji",
+    SHARING_IS_ENABLED: "sharing_is_enabled"
 }

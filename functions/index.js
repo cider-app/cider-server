@@ -136,7 +136,6 @@ exports.onUpdateFolder = functions.firestore
         //  Don't execute if there are no changes to the folder's title, description, or secret 
         if (
             newData[CONSTANTS.DATABASE.TITLE] === prevData[CONSTANTS.DATABASE.TITLE] &&
-            newData[CONSTANTS.DATABASE.DESCRIPTION] === prevData[CONSTANTS.DATABASE.DESCRIPTION] &&
             newData[CONSTANTS.DATABASE.SECRET] === prevData[CONSTANTS.DATABASE.SECRET] && 
             newData[CONSTANTS.DATABASE.EMOJI] === prevData[CONSTANTS.DATABASE.EMOJI]
             ) {
@@ -159,7 +158,6 @@ exports.onUpdateFolder = functions.firestore
                     let ref = doc.ref; 
                     batch.update(ref, {
                         [CONSTANTS.DATABASE.TITLE]: newData[CONSTANTS.DATABASE.TITLE],
-                        [CONSTANTS.DATABASE.DESCRIPTION]: newData[CONSTANTS.DATABASE.DESCRIPTION],
                         [CONSTANTS.DATABASE.SECRET]: newData[CONSTANTS.DATABASE.SECRET],
                         [CONSTANTS.DATABASE.EMOJI]: newData[CONSTANTS.DATABASE.EMOJI],
                         [CONSTANTS.DATABASE.MODIFIED_ON]: modifiedOn
@@ -170,6 +168,46 @@ exports.onUpdateFolder = functions.firestore
             })
             .catch(error => console.log("Error getting documents: ", error))
     })
+
+exports.disableFolderSharing = functions.firestore
+    .document(`${CONSTANTS.DATABASE.FOLDERS}/{folderID}`)
+    .onUpdate((change, context) => {
+        const newData = change.after.data(); 
+        const prevData = change.before.data(); 
+        const sharingIsEnabled = newData[CONSTANTS.DATABASE.SHARING_IS_ENABLED];
+        const folderCreatorId = newData[CONSTANTS.DATABASE.CREATED_BY_USER_ID];
+        const folderID = context.params.folderID; 
+
+        //  If sharing is enabled or there's no change to the "sharing_is_enabled" field, don't do anything
+        if (sharingIsEnabled || sharingIsEnabled === prevData[CONSTANTS.DATABASE.SHARING_IS_ENABLED]) {
+            return 
+        }
+
+        //  Otherwise, if sharing is disabled...
+        return db.collection(CONSTANTS.DATABASE.FOLDERS).doc(folderID).collection(CONSTANTS.DATABASE.FOLDER_USERS).get()
+        .then(snapshot => {
+            if (snapshot.empty) {
+                console.log("No matching documents");
+                return;
+            }
+
+            //  Delete all folder members: Loop through each folder_user doc and delete
+            let batch = db.batch(); 
+            snapshot.docs.forEach(doc => {
+                let userId = doc.id;
+                //  Don't delete document reference for the folder creator 
+                if (userId !== folderCreatorId) {
+                    batch.delete(doc.ref); 
+
+                    //  Also delete the corresponding user_folder doc for each user 
+                    let userFolderRef = db.collection(CONSTANTS.DATABASE.USERS).doc(userId).collection(CONSTANTS.DATABASE.FOLDERS).doc(folderID)
+                    batch.delete(userFolderRef); 
+                }
+            })
+
+            return batch.commit(); 
+        })
+    }) 
 
 exports.onDeleteFolder = functions.firestore
     .document(`${CONSTANTS.DATABASE.FOLDERS}/{folderID}`)
